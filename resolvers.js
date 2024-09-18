@@ -1,5 +1,5 @@
 import { getCompany } from "./db/companies.js";
-import { createJob, getJob, getJobs, getJobsByCompany } from "./db/jobs.js";
+import { createJob, getJob, getJobs, getJobsByCompany, updateJob } from "./db/jobs.js";
 
 export const resolvers = {
   Query: {
@@ -21,9 +21,20 @@ export const resolvers = {
   },
 
   Mutation: {
-    createJob: (_root, { title, description }) => {
+    createJob: (_root, { input: { title, description } }, { auth }) => {
+      if (!auth) {
+        throw unauthorizedError('Missing authentication');
+      }
       const companyId = 'FjcJCHJALA4i'; // TODO set based on user
       return createJob({ companyId, title, description });
+    },
+
+    deleteJob: (_root, { id }) => {
+      return deleteJob({ id });
+    },
+
+    updateJob: (_root, {input: { id, title, description }}) => {
+      return updateJob({ id, title, description });
     },
   },
 
@@ -40,6 +51,12 @@ export const resolvers = {
 function notFoundError(message) {
   return new GraphQLError(message, {
     extensions: { code: "NOT_FOUND" },
+  });
+}
+
+function unauthorizedError(message) {
+  return new GraphQLError(message, {
+    extensions: { code: 'UNAUTHORIZED' },
   });
 }
 
